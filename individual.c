@@ -17,7 +17,7 @@
 int RedirectHandler(const char *FileName, int Handle, int AddMode);
 int RedirectProcess(char *Arguments[], int AmOfArg);
 int GetCommandList(struct dirent ***Commands); 
-int GetNextCommand(char *argv[], int argc, int *FirsArg, int* CurGlobalArg, struct dirent **Commands, int AmOfCommands);
+int GetNextCommand(char *argv[], int argc, int *FirsArg, int* CurArg, struct dirent **Commands, int AmOfCommands);
 int ExecuteCommand(char **Directory, char *Arguments[]);
 int WaitChild(pid_t ChildPid);
 
@@ -29,18 +29,18 @@ int main(int argc, char* argv[])
   }
   struct dirent **Commands;
   int AmOfCommands = GetCommandList(&Commands);
-  int CurGlobalArg = 1, FirstArg = 1;
-  while (CurGlobalArg < argc){
-    if (GetNextCommand(argv, argc, &FirstArg, &CurGlobalArg, Commands, AmOfCommands) != 0){
+  int CurArg = 1, FirstArg = 1;
+  while (CurArg < argc){
+    if (GetNextCommand(argv, argc, &FirstArg, &CurArg, Commands, AmOfCommands) != 0){
       fprintf(stderr, "Could not determine commnad\n");
       return 2;
     }
 
-    char *Arguments[CurGlobalArg - FirstArg + 1];
-    for (int i = 0; i < CurGlobalArg - FirstArg; i++){
+    char *Arguments[CurArg - FirstArg + 1];
+    for (int i = 0; i < CurArg - FirstArg; i++){
       Arguments[i] = argv[i + FirstArg]; 
     }
-    Arguments[CurGlobalArg - FirstArg] = NULL;
+    Arguments[CurArg - FirstArg] = NULL;
 
     char *Directory = calloc(_SC_TRACE_NAME_MAX, sizeof(char));
     if (Directory == NULL){
@@ -136,37 +136,37 @@ int ScanDirFilter(const struct dirent *FilePtr)
   return 0;
 }
 
-int GetNextCommand(char *argv[], int argc, int *FirstArg, int* CurGlobalArg, struct dirent **Commands, int AmOfCommands)
+int GetNextCommand(char *argv[], int argc, int *FirstArg, int* CurArg, struct dirent **Commands, int AmOfCommands)
 {
   int AmOfArg = 2, CurArg = 0;
   int iResult = 0;
-  while (iResult == 0 && *CurGlobalArg < argc){
+  while (iResult == 0 && *CurArg < argc){
     for (int j = 0; j < AmOfCommands && iResult == 0; j++){
-      if (strcmp(argv[*CurGlobalArg], Commands[j]->d_name) == 0){
+      if (strcmp(argv[*CurArg], Commands[j]->d_name) == 0){
         iResult = 1;
       }
     }
     if (iResult == 1){
-      *FirstArg = *CurGlobalArg;
+      *FirstArg = *CurArg;
     }
-    (*CurGlobalArg)++;
+    (*CurArg)++;
   }
-  if (iResult == 0 && *CurGlobalArg == argc){
+  if (iResult == 0 && *CurArg == argc){
     fprintf(stderr, "Could not find command\n");
     return 1;  
   }
 
   iResult = 0;
-  while (iResult == 0 && *CurGlobalArg < argc){
+  while (iResult == 0 && *CurArg < argc){
     for (int j = 0; j < AmOfCommands && iResult == 0; j++){
-      if (strcmp(argv[*CurGlobalArg], Commands[j]->d_name) == 0){
+      if (strcmp(argv[*CurArg], Commands[j]->d_name) == 0){
         iResult = 1;
       }
     } 
-    (*CurGlobalArg)++;
+    (*CurArg)++;
   }
   if (iResult == 1){
-    (*CurGlobalArg)--;
+    (*CurArg)--;
   }
   return 0;
 }

@@ -15,8 +15,8 @@
 #define RHFileMode S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
 #define RHFileFlags O_CREAT
 int RedirectHandler(const char *FileName, int Handle, int AddMode);
-int ProcessRedirection(char *Arguments[], int AmOfArg);
-int GetCommands(struct dirent ***Commands); 
+int RedirectProcess(char *Arguments[], int AmOfArg);
+int GetCommandList(struct dirent ***Commands); 
 int GetNextCommand(char *argv[], int argc, int *FirsArg, int* CurGlobalArg, struct dirent **Commands, int AmOfCommands);
 int ExecuteCommand(char **Directory, char *Arguments[]);
 int WaitChild(pid_t ChildPid);
@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     return 1;
   }
   struct dirent **Commands;
-  int AmOfCommands = GetCommands(&Commands);
+  int AmOfCommands = GetCommandList(&Commands);
   int CurGlobalArg = 1, FirstArg = 1;
   while (CurGlobalArg < argc){
     if (GetNextCommand(argv, argc, &FirstArg, &CurGlobalArg, Commands, AmOfCommands) != 0){
@@ -79,7 +79,7 @@ int RedirectHandler(const char *FileName, int Handle, int AddMode)
   return Handle;
 }
 
-int ProcessRedirection(char *Arguments[], int AmOfArg)
+int RedirectProcess(char *Arguments[], int AmOfArg)
 {
   int Offset = 0;
   int Result = -3;
@@ -119,7 +119,7 @@ int ProcessRedirection(char *Arguments[], int AmOfArg)
 
 int ScanDirFilter(const struct dirent *FilePtr);
 
-int GetCommands(struct dirent ***Commands)
+int GetCommandList(struct dirent ***Commands)
 {
   int iResult = scandir("/bin", Commands, ScanDirFilter, NULL);
   if (iResult == -1){
@@ -177,7 +177,7 @@ int ExecuteCommand(char **Directory, char *Arguments[])
   while (Arguments[AmOfArg] != NULL) AmOfArg++;
   int ThStdIn = dup(STDIN_FILENO);
   int ThStdOut = dup(STDIN_FILENO);
-  int iResult = ProcessRedirection(Arguments, AmOfArg);
+  int iResult = RedirectProcess(Arguments, AmOfArg);
   if (iResult <= 0 && iResult != -3){
     close(ThStdIn);
     close(ThStdOut);
